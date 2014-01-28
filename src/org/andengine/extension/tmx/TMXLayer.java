@@ -8,6 +8,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
+import org.andengine.engine.camera.BoundCamera;
 import org.andengine.engine.camera.Camera;
 import org.andengine.entity.sprite.batch.SpriteBatch;
 import org.andengine.extension.tmx.TMXLoader.ITMXTilePropertiesListener;
@@ -218,10 +219,22 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 
 	@Override
 	protected void draw(final GLState pGLState, final Camera pCamera) {
-		final float cameraXMin = pCamera.getXMin();
-		final float cameraYMin = pCamera.getYMin();
-		final float cameraXMax = pCamera.getXMax();
-		final float cameraYMax = pCamera.getYMax();
+		float cameraXMin;
+		float cameraYMin;
+		float cameraXMax;
+		float cameraYMax;
+		
+		if(pCamera instanceof BoundCamera){
+			cameraXMin = ((BoundCamera)pCamera).getBoundsXMin();
+			cameraYMin = ((BoundCamera)pCamera).getBoundsYMin();
+			cameraXMax = ((BoundCamera)pCamera).getBoundsXMax();
+			cameraYMax = ((BoundCamera)pCamera).getBoundsYMax();
+		}else{
+			cameraXMin = pCamera.getXMin();
+			cameraYMin = pCamera.getYMin();
+			cameraXMax = pCamera.getXMax();
+			cameraYMax = pCamera.getYMax();
+		}
 
 		final TMXTile tmxTileMin = this.getTMXTileAt(cameraXMin, cameraYMin, true);
 		final TMXTile tmxTileMax = this.getTMXTileAt(cameraXMax, cameraYMax, true);
