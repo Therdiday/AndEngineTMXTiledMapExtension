@@ -225,10 +225,10 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 		float cameraYMax;
 		
 		if(pCamera instanceof BoundCamera){
-			cameraXMin = ((BoundCamera)pCamera).getBoundsXMin();
-			cameraYMin = ((BoundCamera)pCamera).getBoundsYMin();
-			cameraXMax = ((BoundCamera)pCamera).getBoundsXMax();
-			cameraYMax = ((BoundCamera)pCamera).getBoundsYMax();
+			cameraXMin = ((BoundCamera)pCamera).getBoundsXMin() > pCamera.getXMin() ? ((BoundCamera)pCamera).getBoundsXMin() : pCamera.getXMin();
+			cameraYMin = ((BoundCamera)pCamera).getBoundsYMin() > pCamera.getYMin() ? ((BoundCamera)pCamera).getBoundsYMin() : pCamera.getYMin();
+			cameraXMax = ((BoundCamera)pCamera).getBoundsXMax() < pCamera.getXMax() ? ((BoundCamera)pCamera).getBoundsXMax() : pCamera.getXMax();
+			cameraYMax = ((BoundCamera)pCamera).getBoundsYMax() < pCamera.getYMax() ? ((BoundCamera)pCamera).getBoundsYMax() : pCamera.getYMax();
 		}else{
 			cameraXMin = pCamera.getXMin();
 			cameraYMin = pCamera.getYMin();
