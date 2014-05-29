@@ -31,6 +31,7 @@ public class TMXTiledMap extends Entity implements TMXConstants {
 	private final int mTilesRows;
 	private final int mTileWidth;
 	private final int mTileHeight;
+	private boolean mDrawAll = false;
 
 	private final ArrayList<TMXTileSet> mTMXTileSets = new ArrayList<TMXTileSet>();
 	private final ArrayList<TMXLayer> mTMXLayers = new ArrayList<TMXLayer>();
@@ -90,6 +91,14 @@ public class TMXTiledMap extends Entity implements TMXConstants {
 		return this.mTileHeight;
 	}
 
+	public boolean getDrawAll(){
+		return this.mDrawAll;
+	}
+	
+	public void setDrawAll(boolean pDrawAll){
+		this.mDrawAll = pDrawAll;
+	}
+	
 	/* package */ void addTMXTileSet(final TMXTileSet pTMXTileSet) {
 		this.mTMXTileSets.add(pTMXTileSet);
 	}

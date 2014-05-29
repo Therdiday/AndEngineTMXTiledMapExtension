@@ -28,6 +28,7 @@ import org.xml.sax.Attributes;
 import android.opengl.GLES20;
 import android.util.Base64;
 import android.util.Base64InputStream;
+import android.util.Log;
 
 /**
  * (c) 2010 Nicolas Gramlich
@@ -219,40 +220,57 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 
 	@Override
 	protected void draw(final GLState pGLState, final Camera pCamera) {
-		float cameraXMin;
-		float cameraYMin;
-		float cameraXMax;
-		float cameraYMax;
-		
-		if(pCamera instanceof BoundCamera){
-			cameraXMin = ((BoundCamera)pCamera).getBoundsXMin() > pCamera.getXMin() ? ((BoundCamera)pCamera).getBoundsXMin() : pCamera.getXMin();
-			cameraYMin = ((BoundCamera)pCamera).getBoundsYMin() > pCamera.getYMin() ? ((BoundCamera)pCamera).getBoundsYMin() : pCamera.getYMin();
-			cameraXMax = ((BoundCamera)pCamera).getBoundsXMax() < pCamera.getXMax() ? ((BoundCamera)pCamera).getBoundsXMax() : pCamera.getXMax();
-			cameraYMax = ((BoundCamera)pCamera).getBoundsYMax() < pCamera.getYMax() ? ((BoundCamera)pCamera).getBoundsYMax() : pCamera.getYMax();
+		if(mTMXTiledMap.getDrawAll()){
+			drawOrthogonalAll(pGLState, pCamera);
 		}else{
-			cameraXMin = pCamera.getXMin();
-			cameraYMin = pCamera.getYMin();
-			cameraXMax = pCamera.getXMax();
-			cameraYMax = pCamera.getYMax();
-		}
-
-		final TMXTile tmxTileMin = this.getTMXTileAt(cameraXMin, cameraYMin, true);
-		final TMXTile tmxTileMax = this.getTMXTileAt(cameraXMax, cameraYMax, true);
-
-		/* TMX rows are counted up, starting from the topmost row to the bottom row. */
-		final int tileColumnMin = tmxTileMin.getTileColumn();
-		final int tileRowMin = tmxTileMax.getTileRow();
-		final int tileColumnMax = tmxTileMax.getTileColumn();
-		final int tileRowMax = tmxTileMin.getTileRow();
-
-		final int rowLength = (tileColumnMax - tileColumnMin) + 1;
-
-		for(int row = tileRowMin; row <= tileRowMax; row++) {
-			final int spriteBatchIndex = this.getSpriteBatchIndex(tileColumnMin, row);
-			this.mSpriteBatchVertexBufferObject.draw(GLES20.GL_TRIANGLES, spriteBatchIndex * SpriteBatch.VERTICES_PER_SPRITE, rowLength * SpriteBatch.VERTICES_PER_SPRITE);
+			float cameraXMin;
+			float cameraYMin;
+			float cameraXMax;
+			float cameraYMax;
+			
+			if(pCamera instanceof BoundCamera && ((BoundCamera) pCamera).isBoundsEnabled()){
+				cameraXMin = ((BoundCamera)pCamera).getBoundsXMin() > pCamera.getXMin() ? ((BoundCamera)pCamera).getBoundsXMin() : pCamera.getXMin();
+				cameraYMin = ((BoundCamera)pCamera).getBoundsYMin() > pCamera.getYMin() ? ((BoundCamera)pCamera).getBoundsYMin() : pCamera.getYMin();
+				cameraXMax = ((BoundCamera)pCamera).getBoundsXMax() < pCamera.getXMax() ? ((BoundCamera)pCamera).getBoundsXMax() : pCamera.getXMax();
+				cameraYMax = ((BoundCamera)pCamera).getBoundsYMax() < pCamera.getYMax() ? ((BoundCamera)pCamera).getBoundsYMax() : pCamera.getYMax();
+			}else{
+				cameraXMin = pCamera.getXMin();
+				cameraYMin = pCamera.getYMin();
+				cameraXMax = pCamera.getXMax();
+				cameraYMax = pCamera.getYMax();
+			}
+//			Log.d("Info", "TMXLayer - X["+cameraXMin+"]["+cameraXMax+"] - Y["+cameraYMin+"]["+cameraYMax+"]");
+			
+			final TMXTile tmxTileMin = this.getTMXTileAt(cameraXMin, cameraYMin, true);
+			final TMXTile tmxTileMax = this.getTMXTileAt(cameraXMax, cameraYMax, true);
+	
+			/* TMX rows are counted up, starting from the topmost row to the bottom row. */
+			final int tileColumnMin = tmxTileMin.getTileColumn();
+			final int tileRowMin = tmxTileMax.getTileRow();
+			final int tileColumnMax = tmxTileMax.getTileColumn();
+			final int tileRowMax = tmxTileMin.getTileRow();
+	
+			final int rowLength = (tileColumnMax - tileColumnMin) + 1;
+	
+			for(int row = tileRowMin; row <= tileRowMax; row++) {
+				final int spriteBatchIndex = this.getSpriteBatchIndex(tileColumnMin, row);
+				this.mSpriteBatchVertexBufferObject.draw(GLES20.GL_TRIANGLES, spriteBatchIndex * SpriteBatch.VERTICES_PER_SPRITE, rowLength * SpriteBatch.VERTICES_PER_SPRITE);
+			}
 		}
 	}
 
+	public void drawOrthogonalAll(final GLState pGLState, final Camera pCamera) {
+		final int tileColumns = this.mTileColumns;
+		final int tileRows = this.mTileRows;
+		
+		for (int j = 0; j < tileRows ; j++) {
+			for (int i = 0; i < tileColumns ; i++) {
+				this.mSpriteBatchVertexBufferObject.draw(GLES20.GL_TRIANGLE_STRIP, this.getSpriteBatchIndex(i, j)
+						* SpriteBatch.VERTICES_PER_SPRITE, SpriteBatch.VERTICES_PER_SPRITE);
+			}
+		}
+	}
+	
 	// ===========================================================
 	// Methods
 	// ===========================================================
