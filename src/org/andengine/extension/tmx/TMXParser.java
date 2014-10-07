@@ -172,6 +172,8 @@ public class TMXParser extends DefaultHandler implements TMXConstants {
 				TMXObject tmxObject = tmxObjects.get(tmxObjects.size() -1);
 				tmxObject.addPolyline(pAttributes);
 			}
+		} else if (pLocalName.equals(TMXConstants.TAG_OBJECT_ATTRIBUTE_ELLIPSE)){
+			
 		} else {
 			throw new TMXParseException("Unexpected start tag: '" + pLocalName + "'.");
 		}
@@ -217,6 +219,8 @@ public class TMXParser extends DefaultHandler implements TMXConstants {
 			this.mInObject = false;
 		} else if (pLocalName.equals(TMXConstants.TAG_OBJECT_ATTRIBUTE_POLYLINE)){
 			this.mInObjectPolyline = false;
+		} else if (pLocalName.equals(TMXConstants.TAG_OBJECT_ATTRIBUTE_ELLIPSE)){
+			
 		} else {
 			throw new TMXParseException("Unexpected end tag: '" + pLocalName + "'.");
 		}
