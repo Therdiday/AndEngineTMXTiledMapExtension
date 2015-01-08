@@ -343,9 +343,9 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 		final int tileHeight = this.getTileHeight();
 		final int tileWidth = this.getTileWidth();
 		
-//		boolean flippedHorizontally = (pGlobalTileID & FLIP_X_FLAG) != 0;
-//        boolean flippedVertically = (pGlobalTileID & FLIP_Y_FLAG) != 0;
-//        boolean rotated = (pGlobalTileID & ROTATION_FLAG) != 0;
+		boolean flippedHorizontally = (pGlobalTileID & FLIP_X_FLAG) != 0;
+        boolean flippedVertically = (pGlobalTileID & FLIP_Y_FLAG) != 0;
+        boolean rotated = (pGlobalTileID & ROTATION_FLAG) != 0;
         int gid = (int) (pGlobalTileID & ~CLEAR_MASK);
 		
 		if(gid == 0) {
@@ -354,7 +354,7 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 		} else {
 			final ITextureRegion tmxTileTextureRegion = tmxTiledMap.getTextureRegionFromGlobalTileID(gid);
 
-//			float rotation = rotated ? 90 : 0;
+			float rotation = rotated ? 90 : 0;
 			
 			if(this.mTexture == null) {
 				this.mTexture = tmxTileTextureRegion.getTexture();
@@ -371,10 +371,14 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 			final float tileX = this.getTileX(tileColumn);
 			final float tileY = this.getTileY(tileRow);		
 			
-//			this.drawWithoutChecks(tmxTileTextureRegion, tileX, tileY, tileWidth, tileHeight, rotation, 1, 1, 1, 1);
-//			this.drawWithoutChecks(tmxTileTextureRegion, tileX, tileY, tileWidth, tileHeight,
-//					rotation, flippedHorizontally ? -1 : 1, flippedVertically ? -1 : 1, 1, 1, 1, 1);
-			this.drawWithoutChecks(tmxTileTextureRegion, tileX, tileY, tileWidth, tileHeight, Color.WHITE_ABGR_PACKED_FLOAT);
+			if(flippedHorizontally || flippedVertically){
+				this.drawWithoutChecks(tmxTileTextureRegion, tileX, tileY, tileWidth, tileHeight,
+						rotation, flippedHorizontally ? -1 : 1, flippedVertically ? -1 : 1, 1, 1, 1, 1);
+			}else if(rotated){
+				this.drawWithoutChecks(tmxTileTextureRegion, tileX, tileY, tileWidth, tileHeight, rotation, 1, 1, 1, 1);
+			}else{
+				this.drawWithoutChecks(tmxTileTextureRegion, tileX, tileY, tileWidth, tileHeight, Color.WHITE_ABGR_PACKED_FLOAT);
+			}
 
 			/* Notify the ITMXTilePropertiesListener if it exists. */
 			if(pTMXTilePropertyListener != null) {
