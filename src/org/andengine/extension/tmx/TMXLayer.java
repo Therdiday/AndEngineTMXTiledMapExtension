@@ -42,6 +42,11 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 	// Constants
 	// ===========================================================
 
+	private static final int FLIP_X_FLAG = 0x80000000;
+	private static final int FLIP_Y_FLAG = 0x40000000;
+	private static final int ROTATION_FLAG = 0x20000000;
+	private static final int CLEAR_MASK = 0xE0000000;
+	
 	// ===========================================================
 	// Fields
 	// ===========================================================
@@ -55,6 +60,7 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 
 	private int mTilesAdded;
 	private final int mGlobalTileIDsExpected;
+	private boolean mDrawAll = false;
 
 	private final TMXProperties<TMXLayerProperty> mTMXLayerProperties = new TMXProperties<TMXLayerProperty>();
 
@@ -164,6 +170,14 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 		return this.getTMXTile(tileColumn, tileRow, pReturnClosestTMXTileIfOutOfBounds);
 	}
 
+	public boolean getDrawAll(){
+		return this.mDrawAll;
+	}
+	
+	public void setDrawAll(boolean pDrawAll){
+		this.mDrawAll = pDrawAll;
+	}
+	
 	public void addTMXLayerProperty(final TMXLayerProperty pTMXLayerProperty) {
 		this.mTMXLayerProperties.add(pTMXLayerProperty);
 	}
@@ -181,11 +195,11 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 
 	}
 
-	@Override
-	@Deprecated
-	public void setRotation(final float pRotation) throws MethodNotSupportedException {
-		throw new MethodNotSupportedException();
-	}
+//	@Override
+//	@Deprecated
+//	public void setRotation(final float pRotation) throws MethodNotSupportedException {
+//		throw new MethodNotSupportedException();
+//	}
 
 	@Override
 	protected void onManagedUpdate(final float pSecondsElapsed) {
@@ -220,7 +234,7 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 
 	@Override
 	protected void draw(final GLState pGLState, final Camera pCamera) {
-		if(mTMXTiledMap.getDrawAll()){
+		if(mTMXTiledMap.getDrawAll() || getDrawAll()){
 			drawOrthogonalAll(pGLState, pCamera);
 		}else{
 			float cameraXMin;
@@ -260,14 +274,22 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 	}
 
 	public void drawOrthogonalAll(final GLState pGLState, final Camera pCamera) {
-		final int tileColumns = this.mTileColumns;
-		final int tileRows = this.mTileRows;
+//		final int tileColumns = this.mTileColumns;
+//		final int tileRows = this.mTileRows;
+//		
+//		for (int j = 0; j < tileRows ; j++) {
+//			for (int i = 0; i < tileColumns ; i++) {
+//				TMXTile tile = getTMXTile(i,j);
+//				if(tile != null && tile.getGlobalTileID() > 0){
+//					this.mSpriteBatchVertexBufferObject.draw(GLES20.GL_TRIANGLE_STRIP, this.getSpriteBatchIndex(i, j)
+//							* SpriteBatch.VERTICES_PER_SPRITE, SpriteBatch.VERTICES_PER_SPRITE);
+//				}
+//			}
+//		}
 		
-		for (int j = 0; j < tileRows ; j++) {
-			for (int i = 0; i < tileColumns ; i++) {
-				this.mSpriteBatchVertexBufferObject.draw(GLES20.GL_TRIANGLE_STRIP, this.getSpriteBatchIndex(i, j)
-						* SpriteBatch.VERTICES_PER_SPRITE, SpriteBatch.VERTICES_PER_SPRITE);
-			}
+		for(int row = 0; row <= mTileRows; row++) {
+			final int spriteBatchIndex = this.getSpriteBatchIndex(0, row);
+			this.mSpriteBatchVertexBufferObject.draw(GLES20.GL_TRIANGLES, spriteBatchIndex * SpriteBatch.VERTICES_PER_SPRITE, mTileColumns * SpriteBatch.VERTICES_PER_SPRITE);
 		}
 	}
 	
@@ -276,7 +298,8 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 	// ===========================================================
 
 	/* package */ void initializeTMXTileFromXML(final Attributes pAttributes, final ITMXTilePropertiesListener pTMXTilePropertyListener) {
-		this.addTileByGlobalTileID(SAXUtils.getIntAttributeOrThrow(pAttributes, TMXConstants.TAG_TILE_ATTRIBUTE_GID), pTMXTilePropertyListener);
+		this.addTileByGlobalTileID(SAXUtils.getLongAttributeOrThrow(pAttributes, TMXConstants.TAG_TILE_ATTRIBUTE_GID), pTMXTilePropertyListener);
+//		this.addTileByGlobalTileID(SAXUtils.getIntAttributeOrThrow(pAttributes, TMXConstants.TAG_TILE_ATTRIBUTE_GID), pTMXTilePropertyListener);
 	}
 
 	/* package */ void initializeTMXTilesFromDataString(final String pDataString, final String pDataEncoding, final String pDataCompression, final ITMXTilePropertiesListener pTMXTilePropertyListener) throws IOException, IllegalArgumentException {
@@ -309,7 +332,7 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 		}
 	}
 
-	private void addTileByGlobalTileID(final int pGlobalTileID, final ITMXTilePropertiesListener pTMXTilePropertyListener) {
+	private void addTileByGlobalTileID(final long pGlobalTileID, final ITMXTilePropertiesListener pTMXTilePropertyListener) {
 		final TMXTiledMap tmxTiledMap = this.mTMXTiledMap;
 
 		final int tileColumn = this.mTilesAdded % this.mTileColumns;
@@ -319,12 +342,20 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 
 		final int tileHeight = this.getTileHeight();
 		final int tileWidth = this.getTileWidth();
-		if(pGlobalTileID == 0) {
-			final TMXTile tmxTile = new TMXTile(pGlobalTileID, tileColumn, tileRow, tileWidth, tileHeight, null);
+		
+//		boolean flippedHorizontally = (pGlobalTileID & FLIP_X_FLAG) != 0;
+//        boolean flippedVertically = (pGlobalTileID & FLIP_Y_FLAG) != 0;
+//        boolean rotated = (pGlobalTileID & ROTATION_FLAG) != 0;
+        int gid = (int) (pGlobalTileID & ~CLEAR_MASK);
+		
+		if(gid == 0) {
+			final TMXTile tmxTile = new TMXTile(gid, tileColumn, tileRow, tileWidth, tileHeight, null);
 			tmxTiles[tileRow][tileColumn] = tmxTile;
 		} else {
-			final ITextureRegion tmxTileTextureRegion = tmxTiledMap.getTextureRegionFromGlobalTileID(pGlobalTileID);
+			final ITextureRegion tmxTileTextureRegion = tmxTiledMap.getTextureRegionFromGlobalTileID(gid);
 
+//			float rotation = rotated ? 90 : 0;
+			
 			if(this.mTexture == null) {
 				this.mTexture = tmxTileTextureRegion.getTexture();
 				super.initBlendFunction(this.mTexture);
@@ -333,17 +364,21 @@ public class TMXLayer extends SpriteBatch implements TMXConstants {
 					throw new AndEngineRuntimeException("All TMXTiles in a TMXLayer need to be in the same TMXTileSet.");
 				}
 			}
-			final TMXTile tmxTile = new TMXTile(pGlobalTileID, tileColumn, tileRow, tileWidth, tileHeight, tmxTileTextureRegion);
+			final TMXTile tmxTile = new TMXTile(gid, tileColumn, tileRow, tileWidth, tileHeight, tmxTileTextureRegion);
 			tmxTiles[tileRow][tileColumn] = tmxTile;
 
 			this.setIndex(this.getSpriteBatchIndex(tileColumn, tileRow));
 			final float tileX = this.getTileX(tileColumn);
-			final float tileY = this.getTileY(tileRow);
+			final float tileY = this.getTileY(tileRow);		
+			
+//			this.drawWithoutChecks(tmxTileTextureRegion, tileX, tileY, tileWidth, tileHeight, rotation, 1, 1, 1, 1);
+//			this.drawWithoutChecks(tmxTileTextureRegion, tileX, tileY, tileWidth, tileHeight,
+//					rotation, flippedHorizontally ? -1 : 1, flippedVertically ? -1 : 1, 1, 1, 1, 1);
 			this.drawWithoutChecks(tmxTileTextureRegion, tileX, tileY, tileWidth, tileHeight, Color.WHITE_ABGR_PACKED_FLOAT);
 
 			/* Notify the ITMXTilePropertiesListener if it exists. */
 			if(pTMXTilePropertyListener != null) {
-				final TMXProperties<TMXTileProperty> tmxTileProperties = tmxTiledMap.getTMXTileProperties(pGlobalTileID);
+				final TMXProperties<TMXTileProperty> tmxTileProperties = tmxTiledMap.getTMXTileProperties(gid);
 				if(tmxTileProperties != null) {
 					pTMXTilePropertyListener.onTMXTileWithPropertiesCreated(tmxTiledMap, this, tmxTile, tmxTileProperties);
 				}
